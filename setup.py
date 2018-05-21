@@ -2,9 +2,9 @@
 
 from setuptools import setup
 
-#import jupyter_plotly_dash as dpd
+import jupyter_plotly_dash as dpd
 
-VERSION = '0.0.3' #dpd.__version__
+VERSION = dpd.__version__
 
 with open('README.md') as f:
     long_description = f.read()
