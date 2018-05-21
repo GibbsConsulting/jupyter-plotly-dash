@@ -2,9 +2,9 @@
 
 from setuptools import setup
 
-import jupyter_plotly_dash as dpd
+#import jupyter_plotly_dash as dpd
 
-VERSION = dpd.__version__
+VERSION = '0.0.2' #dpd.__version__
 
 with open('README.md') as f:
     long_description = f.read()
@@ -16,7 +16,7 @@ setup(
     description="Interactive Jupyter use of plotly dash apps",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Mark Gibbs",
+    author="Gibbs Consulting",
     author_email="jupyter_plotly_dash@gibbsconsulting.ca",
     license='MIT',
     packages=[
@@ -25,7 +25,7 @@ setup(
     classifiers = [
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
+    'License :: OSI Approved :: GNU Affero General Public License v3',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.6',
     ],
@@ -37,7 +37,7 @@ setup(
     },
     install_requires = ['django-plotly-dash',
                         'jupyter',
-                        'aiohttp'.
+                        'aiohttp',
                         ],
     python_requires=">=3.6",
     )
