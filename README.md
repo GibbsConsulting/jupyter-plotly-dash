@@ -7,7 +7,7 @@ See the source for this project here:
 
 More detailed information
 can be found in the online documentation at
-<https://readthedocs.org/projects/django-plotly-dash>
+<https://readthedocs.org/projects/jupyter-plotly-dash>
 
 ## Installation
 
