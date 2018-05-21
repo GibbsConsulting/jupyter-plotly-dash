@@ -10,8 +10,10 @@ class JupyterDash:
         self.height = height
         self.add_external_link = True
         self.session_state = dict()
+        self.app_state = dict()
     def as_dash_instance(self):
-        return self.dd.as_dash_instance()
+        # TODO perhaps cache this. If so, need to ensure updated if self.app_state changes
+        return self.dd.form_dash_instance(replacements=self.app_state)
 
     def get_session_state(self):
         return self.session_state
@@ -23,15 +25,17 @@ class JupyterDash:
         # Do nothing, at least for the moment...
         pass
 
-    def augment_initial_layout(self, resp):
-        # TODO adapt initial values here
-        return resp
-
     def update_current_state(self, wid, name, value):
-        pass
+        wd = self.app_state.get(wid,None)
+        if wd is None:
+            wd = dict()
+            self.app_state[wid] = wd
+        wd[name] = value
 
     def have_current_state_entry(self, wid, name):
-        return True
+        wd = self.app_state.get(wid,{})
+        entry = wd.get(name,None)
+        return entry is not None
 
     def get_base_pathname(self, specific_identifier):
         return '/%s/' % specific_identifier

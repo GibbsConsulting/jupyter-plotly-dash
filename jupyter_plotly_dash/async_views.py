@@ -52,9 +52,9 @@ class AsyncViews:
         da, dapp = self.get_app_by_name(iden)
         mFunc = dapp.locate_endpoint_function('dash-layout')
         resp = mFunc()
-        resp = da.augment_initial_layout(resp)
-        return web.Response(body=resp.data,
-                            content_type=resp.mimetype)
+        body, mimetype = dapp.augment_initial_layout(resp)
+        return web.Response(body=body,
+                            content_type=mimetype)
 
     async def update(self, request):
 
