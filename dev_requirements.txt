@@ -15,7 +15,6 @@ dash-html-components==0.10.1
 dash-renderer==0.12.1
 decorator==4.3.0
 Django==2.0.5
--e git+https://github.com/delsim/django-plotly-dash.git@e44daad7b2287d965a4201c2f98b4cd6eca1a7c9#egg=django_plotly_dash
 entrypoints==0.2.3
 Flask==1.0.2
 Flask-Compress==1.4.0
@@ -36,7 +35,6 @@ jupyter==1.0.0
 jupyter-client==5.2.3
 jupyter-console==5.2.0
 jupyter-core==4.4.0
--e git+https://delsim@github.com/delsim/jupyter-plotly-dash.git@49168fd3a97553b38589d97804e7fdd91e26cd06#egg=jupyter_plotly_dash
 jupyterlab==0.32.1
 jupyterlab-launcher==0.10.5
 MarkupSafe==1.0
