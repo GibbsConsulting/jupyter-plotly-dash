@@ -40,5 +40,12 @@ setup(
                         'aiohttp',
                         ],
     python_requires=">=3.6",
+    data_files = [
+    ("etc/jupyter/jupyter_notebook_config.d", [
+    "jupyter-config/jupyter_notebook_config.d/jupyter-plotly-dash.json"
+    ])
+    ],
+    include_package_data = True,
+    zip_safe = False,
     )
 
