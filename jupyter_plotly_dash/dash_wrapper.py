@@ -5,7 +5,7 @@ class JupyterDash:
     def __init__(self, name, gav=None, width=800, height=600):
         self.dd = DjangoDash(name)
         self.gav = gav and gav or get_global_av()
-        self.gav.add_app(self, name)
+        self.gav.add_application(self, name)
         self.width = width
         self.height = height
         self.add_external_link = True

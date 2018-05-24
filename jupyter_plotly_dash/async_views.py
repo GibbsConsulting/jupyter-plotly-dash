@@ -23,7 +23,7 @@ class AsyncViews:
         await site.start()
         return runner, site
 
-    def add_app(self, app, name):
+    def add_application(self, app, name):
         self.apps[name] = app
 
     def get_app_by_name(self, name):
