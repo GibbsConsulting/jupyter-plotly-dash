@@ -1,6 +1,6 @@
 from .async_views import AsyncViews, get_global_av
 from django_plotly_dash import DjangoDash
-imporet uuid
+import uuid
 
 class JupyterDash:
     def __init__(self, name, gav=None, width=800, height=600):
