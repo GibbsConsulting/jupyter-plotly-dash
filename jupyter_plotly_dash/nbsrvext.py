@@ -26,6 +26,10 @@ class RequestRedirectionHandler(IPythonHandler):
         return
 
     def send_with_pause(self, da_id, stem, args, src_type):
+
+        reg_app = RequestRedirectionHandler.registered_apps.get(da_id, {})
+        print("Sending %s to %s" % (reg_app, da_id))
+
         self.finish("RequestRedirectionHandler [%s] [%s] args [%s] from [%s]" % (da_id, stem, args, src_type))
 
     @staticmethod
@@ -46,7 +50,7 @@ class JPDHandler(IPythonHandler):
 
     def find_args(self):
         aVals = {}
-        for arg in ['session_id','kernel_id',]:
+        for arg in ['session_id','kernel_id','local_url',]:
             aVals[arg] = self.get_argument(arg, "<MISSING>")
         return aVals
 
