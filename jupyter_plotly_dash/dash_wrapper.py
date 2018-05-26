@@ -50,6 +50,7 @@ class JupyterDash:
 
     def _repr_html_(self):
         url = self.get_app_root_url()
+        local_url = 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
         da_id = self.session_id()
         external = self.add_external_link and '<hr/><a href="{url}" target="_new">Open in new window</a>'.format(url=url) or ""
         iframe = '''<div>
@@ -60,6 +61,7 @@ var session_id = kernel.session_id;
 $.ajax({url:"/app/register/%(da_id)s",
         method:"GET",
         data:{session_id:kernel.session_id,
+              local_url:"%(local_url)s",
               kernel_id:kernel.id},
         success:function(result) {
 console.log("Got ajax fluptasticness");
@@ -72,6 +74,7 @@ console.log(response);
 <iframe src="%(url)s" width=%(width)s height=%(height)s></iframe>
   {external}
 </div>''' %{'url' : url,
+            'local_url' : local_url,
             'da_id' : da_id,
             'external' : external,
             'width' : self.width,
