@@ -192,6 +192,10 @@ class RequestRedirectionHandler(IPythonHandler):
 
     @gen.coroutine
     def send_with_pause(self, da_id, stem, args, src_type):
+
+        reg_app = RequestRedirectionHandler.registered_apps.get(da_id, {})
+        print("Sending %s to %s" % (reg_app, da_id))
+
         # Construct and send a session message as a Comm
         # and add a future to the list of those waiting for a response from the kernel
         # yield the future to get the response
@@ -225,7 +229,7 @@ class JPDHandler(IPythonHandler):
 
     def find_args(self):
         aVals = {}
-        for arg in ['session_id','kernel_id',]:
+        for arg in ['session_id','kernel_id','local_url',]:
             aVals[arg] = self.get_argument(arg, "<MISSING>")
         return aVals
 
