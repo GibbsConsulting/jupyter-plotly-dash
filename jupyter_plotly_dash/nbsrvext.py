@@ -14,6 +14,20 @@ from tornado import gen
 import json
 import uuid
 
+#
+# Three comm_message types are used.
+# The types are in the 'jpd_type' member of data of any comm_open or comm_msh
+# All messages should be intercepted in the server and not passed to the front end
+#
+# inform: outbound message from kernel, that indicates that the message contains info about a dash application
+#                  other data - da_id is the dash application id used by server to route requests
+# request: inbound message from server, requesting a particular route for an app
+#                  other data - stem is the remainder of the url
+# response: outbound message from kernel, containing the response (as a utf-8 string) and associated mime type
+#                  other data - response is the response body, as utf-8
+#                               mimetype is the mime type of the response
+#
+
 current_get = ZMQChannelsHandler.get
 current_on_message = ZMQChannelsHandler.on_message
 current_on_reply = ZMQChannelsHandler._on_zmq_reply
@@ -71,15 +85,75 @@ def wrapped_on_message(self, msg):
 
     return com
 
+#In wrapped on reply, channel is [iopub] and type [comm_open]
+#[b'comm-348fa2dc3ab040d5b731ed1558a4f914']
+#[b'd4bb19e771c068ad9f2be2f0b6822b01b4e2a66c0be3a813c099949b1205b74f', b'{"version":"5.3","date":"2018-05-25T22:58:23.634359Z","session":"5150c95d-adfd68ac54c28dadb5c07d5d","username":"mark","msg_type":"comm_open","msg_id":"29d879f9-ba454246a1932b42b3474fb2"}', b'{"msg_id":"063fc02088274327bf53fbea35a3c07c","username":"username","session":"e2e68a00758c4d61bf439af9300ab4d9","msg_type":"execute_request","version":"5.2","date":"2018-05-25T22:58:23.624863Z"}', b'{}', b'{"data":{"jpd_type":"inform","da_id":"1234abcde"},"comm_id":"348fa2dc3ab040d5b731ed1558a4f914","target_name":"my_comm_target","target_module":null}']
+#<jupyter_client.session.Session object at 0x7fc75162c7f0>
+#Wrapped_on got a response
+#[b'comm-348fa2dc3ab040d5b731ed1558a4f914']
+#[b'd795f70a6afc0a6b385e007f91829475aebade40694f93079fcfcdc4cfb3910f', b'{"version":"5.3","date":"2018-05-25T22:58:24.319687Z","session":"5150c95d-adfd68ac54c28dadb5c07d5d","username":"mark","msg_type":"comm_msg","msg_id":"e5a5bae4-31dd6dc2f7ae3ce5657de46e"}', b'{"msg_id":"036ba77e429541858e2be62665dfdb7f","username":"username","session":"e2e68a00758c4d61bf439af9300ab4d9","msg_type":"execute_request","version":"5.2","date":"2018-05-25T22:58:24.312818Z"}', b'{}', b'{"data":{"jpd_type":"response","response":"this is thee response text","mimetype":"text/rubbish"},"comm_id":"348fa2dc3ab040d5b731ed1558a4f914"}']
+#<jupyter_client.session.Session object at 0x7fc75162c7f0>
+
+
+#[b'comm-1ebacdd11ea8412c919086229a0aefe1']
+#[b'6d7c546144970f15dcafdd784b81afee3b79218f8e64b17ac19d3f485955ab9e', b'{"version":"5.3","date":"2018-05-25T23:19:38.827992Z","session":"ac5a5074-ecc000ef670d5e3b7a082841","username":"mark","msg_type":"comm_open","msg_id":"6d39841c-977429df12dd49bcdc67d870"}', b'{"username":"","version":"5.2","session":"86ecacdaa685a9a424b1639550acdd26","msg_id":"394f991dc49f124f56120903c0257050","msg_type":"execute_request","date":"2018-05-25T23:19:38.819516Z"}', b'{}', b'{"data":{"jpd_type":"inform","da_id":"cebcd0279de84b95b330064f6466433a"},"comm_id":"1ebacdd11ea8412c919086229a0aefe1","target_name":"jupyter_plotly_dash","target_module":null}']
+
+
 def wrapped_on_reply(self, stream, msg_list):
-    channel = getattr(stream,'channel',None)
-    msg_type = ""
     idents, fed_msg_list = self.session.feed_identities(msg_list)
+
+    # Hunt for a comm_open or comm_msg message
+
+    try:
+        loc = fed_msg_list[1].decode('utf-8')
+        jLoc = json.loads(loc)
+        msg_type = jLoc['msg_type']
+        if msg_type[:4] == 'comm':
+            pContent = fed_msg_list[4].decode('utf-8')
+            jpContent = json.loads(pContent)
+            theData = jpContent.get('data',{})
+            jpd_type = theData.get('jpd_type','')
+            if jpd_type == 'inform':
+
+                # Need to store session, channel, stream, username, session(id in header), version, comm_id
+                try:
+                    channel = getattr(stream,'channel',None)
+                    shell_channel = self.channels['shell'] # need this channel for sending requests to kernel
+                    session = self.session
+                    username = jLoc['username']
+                    session_id = jLoc['session']
+                    version = jLoc['version']
+                    comm_id = jpContent['comm_id']
+                    da_id = theData['da_id']
+                except Exception as e:
+                    print(e)
+
+                print("In wrapped on reply, channel is [%s] and type [%s]" % (channel, msg_type))
+                print("Informed")
+                print(session, channel, shell_channel, username, session_id, version, comm_id, da_id)
+
+                RequestRedirectionHandler.register_comm(da_id,
+                                                        {'session':session,
+                                                         'channel':channel,
+                                                         'shell_channel':shell_channel,
+                                                         'username':username,
+                                                         'session_id':session_id,
+                                                         'version':version,
+                                                         'comm_id':comm_id})
+
+                return
+            if jpd_type == 'response':
+                print("Wrapped_on got a response")
+                print(idents)
+                print(fed_msg_list)
+                print(self.session)
+                return
+
+    except:
+        pass
+
     #msg = self.session.deserialize(fed_msg_list)
     #msg_type = msg['header']['msg_type']
-    print("In wrapped on reply, channel is [%s] and type [%s]" % (channel, msg_type))
-    print(idents)
-    print(fed_msg_list)
     return current_on_reply(self, stream, msg_list)
 
 ZMQChannelsHandler.get = wrapped_get
@@ -94,11 +168,8 @@ class RequestRedirectionHandler(IPythonHandler):
     registered_comms = {}
 
     @staticmethod
-    def register_comm(da_id, session, stream, base_header, comm_id):
-        pass
-
-    def send_comm(self, da_id):
-        pass
+    def register_comm(da_id, params):
+        RequestRedirectionHandler.registered_comms[da_id] = params
 
     @gen.coroutine
     def get(self, da_id=None, stem=None):
@@ -115,15 +186,24 @@ class RequestRedirectionHandler(IPythonHandler):
         return
 
     @gen.coroutine
+    def locate_comm(self, da_id, timeout=0):
+        resp = gen.maybe_future(self.registered_comms.get(da_id,None))
+        return resp
+
+    @gen.coroutine
     def send_with_pause(self, da_id, stem, args, src_type):
         # Construct and send a session message as a Comm
         # and add a future to the list of those waiting for a response from the kernel
         # yield the future to get the response
+        comm_bag = yield self.locate_comm(da_id)
+        if comm_bag:
+            resp = yield gen.maybe_future("Sending for [%s]"%comm_bag)
 
         # need a 'yield X or wait n seconds' combo future
         # and also a 'get X or wait n seconds and try again' future for extracting registered instances
 
-        resp = yield gen.maybe_future("RequestRedirectionHandler [%s] [%s] args [%s] from [%s]" % (da_id, stem, args, src_type))
+        else:
+            resp = yield gen.maybe_future("RequestRedirectionHandler [%s] [%s] args [%s] from [%s]" % (da_id, stem, args, src_type))
 
         self.finish(resp)
 

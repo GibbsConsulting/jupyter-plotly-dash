@@ -1,4 +1,5 @@
 from .async_views import AsyncViews, get_global_av
+from .nbkernel import locate_jpd_comm
 from django_plotly_dash import DjangoDash
 import uuid
 
@@ -51,6 +52,7 @@ class JupyterDash:
     def _repr_html_(self):
         url = self.get_app_root_url()
         da_id = self.session_id()
+        comm = locate_jpd_comm(da_id, self)
         external = self.add_external_link and '<hr/><a href="{url}" target="_new">Open in new window</a>'.format(url=url) or ""
         iframe = '''<div>
         <script>
