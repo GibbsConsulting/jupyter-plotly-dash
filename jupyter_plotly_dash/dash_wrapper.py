@@ -10,6 +10,7 @@ class JupyterDash:
         self.gav.add_application(self, name)
         self.width = width
         self.height = height
+        self.frame = False
         self.add_external_link = True
         self.session_state = dict()
         self.app_state = dict()
@@ -56,32 +57,17 @@ class JupyterDash:
         da_id = self.session_id()
         comm = locate_jpd_comm(da_id, self)
         external = self.add_external_link and '<hr/><a href="{url}" target="_new">Open in new window</a>'.format(url=url) or ""
+        fb = 'frameborder="%i"' %(self.frame and 1 or 0)
         iframe = '''<div>
-        <script>
-var kernel = require("base/js/namespace").notebook.kernel;
-var session_id = kernel.session_id;
-
-$.ajax({url:"/app/register/%(da_id)s",
-        method:"GET",
-        data:{session_id:kernel.session_id,
-              local_url:"%(local_url)s",
-              kernel_id:kernel.id},
-        success:function(result) {
-console.log("Got ajax fluptasticness");
-}}).always(function(response){
-console.log("Always response");
-console.log(response);
-})
-;
-</script>
-<iframe src="%(url)s" width=%(width)s height=%(height)s></iframe>
-  {external}
+  <iframe src="%(url)s" width=%(width)s height=%(height)s %(frame)s></iframe>
+  %(external)s
 </div>''' %{'url' : url,
             'local_url' : local_url,
             'da_id' : da_id,
             'external' : external,
             'width' : self.width,
-            'height' : self.height}
+            'height' : self.height,
+            'frame': fb,}
         return iframe
     def callback(self, *args, **kwargs):
         return self.dd.callback(*args,**kwargs)
@@ -135,6 +121,7 @@ console.log(response);
         else:
             # Use direct dispatch with extra arguments in the argMap
             app_state = self.get_session_state()
+            app_state['call_count'] = app_state.get('call_count',0) + 1
             argMap = {}
             argMap = {'dash_app_id': self.local_uuid,
                       'dash_app': self,

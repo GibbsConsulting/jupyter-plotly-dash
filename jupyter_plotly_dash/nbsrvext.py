@@ -325,6 +325,12 @@ def load_jupyter_server_extension(nb_app):
                           (url_path_join(web_app.settings['base_url'],
                                          '/files%(rep)sendpoints/(?P<da_id>\w+)'%{'rep':root_endpoint} ),
                            RequestRedirectionHandler),
+                          (url_path_join(web_app.settings['base_url'],
+                                         '/api/contents%(rep)sendpoints/(?P<da_id>\w+)/(?P<stem>.*)'%{'rep':root_endpoint} ),
+                           RequestRedirectionHandler),
+                          (url_path_join(web_app.settings['base_url'],
+                                         '/api/contents%(rep)sendpoints/(?P<da_id>\w+)'%{'rep':root_endpoint} ),
+                           RequestRedirectionHandler),
                           ])
 
 def _jupyter_server_extension_paths():
