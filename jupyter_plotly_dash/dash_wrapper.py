@@ -92,6 +92,8 @@ console.log(response);
 
 
     def process_view(self, view_name, args, app_path):
+        if view_name == None:
+            view_name = ''
         view_name = view_name.replace('-','_')
         func = getattr(self,'rv_%s'%view_name, None)
         if func is not None:
