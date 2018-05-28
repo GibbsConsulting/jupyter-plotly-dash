@@ -10,6 +10,7 @@ from notebook.services.kernels.handlers import ZMQChannelsHandler
 from traitlets import Instance
 
 from tornado import gen
+from tornado.concurrent import Future, future_set_result_unless_cancelled
 
 import json
 import uuid
@@ -128,9 +129,9 @@ def wrapped_on_reply(self, stream, msg_list):
                 except Exception as e:
                     print(e)
 
-                print("In wrapped on reply, channel is [%s] and type [%s]" % (channel, msg_type))
-                print("Informed")
-                print(session, channel, shell_channel, username, session_id, version, comm_id, da_id)
+                #print("In wrapped on reply, channel is [%s] and type [%s]" % (channel, msg_type))
+                #print("Informed")
+                #print(session, channel, shell_channel, username, session_id, version, comm_id, da_id)
 
                 RequestRedirectionHandler.register_comm(da_id,
                                                         {'session':session,
@@ -147,13 +148,21 @@ def wrapped_on_reply(self, stream, msg_list):
                 print(idents)
                 print(fed_msg_list)
                 print(self.session)
+                parLoc = fed_msg_list[2].decode('utf-8')
+                jParLoc = json.loads(parLoc)
+                print(jParLoc)
+                corr_id = jParLoc['msg_id']
+                future = RequestRedirectionHandler.get_future_for_response(corr_id)
+                print(corr_id, future)
+                response = theData['response']
+                mimetype = theData['mimetype']
+                future_set_result_unless_cancelled(future,(response, mimetype))
+                print("Have set future :",future)
                 return
 
     except:
         pass
 
-    #msg = self.session.deserialize(fed_msg_list)
-    #msg_type = msg['header']['msg_type']
     return current_on_reply(self, stream, msg_list)
 
 ZMQChannelsHandler.get = wrapped_get
@@ -166,6 +175,7 @@ class RequestRedirectionHandler(IPythonHandler):
 
     registered_apps = {}
     registered_comms = {}
+    outstanding_responses = {}
 
     @staticmethod
     def register_comm(da_id, params):
@@ -174,42 +184,90 @@ class RequestRedirectionHandler(IPythonHandler):
     @gen.coroutine
     def get(self, da_id=None, stem=None):
         args = {k:self.get_argument(k) for k in self.request.arguments}
-        self.send_with_pause(da_id, stem, args, "GET")
+        yield self.send_with_pause(da_id, stem, args, "GET")
 
     @gen.coroutine
     def post(self, da_id=None, stem=None):
-        args = {k:self.get_argument(k) for k in self.request.arguments}
-        self.send_with_pause(da_id, stem, args, "POST")
+        #args = {k:self.get_argument(k) for k in self.request.arguments}
+        args = json.loads(self.request.body.decode('utf-8'))
+        yield self.send_with_pause(da_id, stem, args, "POST")
 
     def check_xsrf_cookie(self):
         # Override for this handler; post permitted as the alternatives with xsrf are too awkward to contemplate
         return
 
     @gen.coroutine
-    def locate_comm(self, da_id, timeout=0):
-        resp = gen.maybe_future(self.registered_comms.get(da_id,None))
+    def locate_comm(self, da_id, timeout=1, loops=5 ):
+        resp = self.registered_comms.get(da_id,None)
+        while resp is None and loops > 10:
+            loops -= 1
+            # TODO need to make this work!
+            # A 'get X or wait n seconds and try again' future for extracting registered instances
+            yield gen.sleep(timeout)
+            resp = self.registered_comms.get(da_id,None)
         return resp
+
+    @staticmethod
+    def get_future_for_response(corr_id):
+        f = RequestRedirectionHandler.outstanding_responses.get(corr_id, None)
+        if f is None:
+            # Form a future that gets populated when a response for corr_id is seen
+            f = Future() #gen.maybe_future(("some response","text/html"))
+            RequestRedirectionHandler.outstanding_responses[corr_id] = f
+        return f
 
     @gen.coroutine
     def send_with_pause(self, da_id, stem, args, src_type):
 
-        reg_app = RequestRedirectionHandler.registered_apps.get(da_id, {})
-        print("Sending %s to %s" % (reg_app, da_id))
+        #reg_app = RequestRedirectionHandler.registered_apps.get(da_id, {})
+        #print("Sending %s to %s" % (reg_app, da_id))
 
         # Construct and send a session message as a Comm
         # and add a future to the list of those waiting for a response from the kernel
         # yield the future to get the response
         comm_bag = yield self.locate_comm(da_id)
         if comm_bag:
-            resp = yield gen.maybe_future("Sending for [%s]"%comm_bag)
+            resp = str("Sending for [%s]"%comm_bag)
 
-        # need a 'yield X or wait n seconds' combo future
-        # and also a 'get X or wait n seconds and try again' future for extracting registered instances
+            corr_id = str(uuid.uuid4()).replace('-','')
+            # need a 'yield X or wait n seconds' combo future
+            header = { 'username':comm_bag['username'],
+                       'session':comm_bag['session_id'],
+                       'version':comm_bag['version'],
+                       'msg_id':corr_id,
+                       'msg_type':'comm_msg',
+                }
+            msg = {'header':header,
+                   'metadata':{},
+                   'channel':'shell',
+                   'parent_header':{},
+                   'buffers':[],
+                   'content':{'comm_id':comm_bag['comm_id'],
+                              'data':{'jpd_type':'request',
+                                      'stem':stem,
+                                      'da_id':da_id,
+                                      'args':args,
+                                      }
+                              }
+                   }
+
+            comm_bag['session'].send(comm_bag['shell_channel'],
+                                     msg)
+
+            print("Pausing onm responmse for %s"%corr_id)
+            response, mime_type = yield self.get_future_for_response(corr_id)
+            print("Response")
+            print(response, mime_type)
+            del self.outstanding_responses[corr_id]
+            print("Future deleted")
 
         else:
-            resp = yield gen.maybe_future("RequestRedirectionHandler [%s] [%s] args [%s] from [%s]" % (da_id, stem, args, src_type))
+            response = str('{"re":"RequestRedirectionHandler [%s] [%s] args [%s] from [%s]"}' % (da_id, stem, args, src_type))
+            mime_type = "application/json"
 
-        self.finish(resp)
+        self.write(response)
+        self.set_header("Content-Type",mime_type)
+        #self.finish()
 
     @staticmethod
     def register_instance( da_id, args ):
@@ -260,6 +318,12 @@ def load_jupyter_server_extension(nb_app):
                            RequestRedirectionHandler),
                           (url_path_join(web_app.settings['base_url'],
                                          '%(rep)sendpoints/(?P<da_id>\w+)'%{'rep':root_endpoint} ),
+                           RequestRedirectionHandler),
+                          (url_path_join(web_app.settings['base_url'],
+                                         '/files%(rep)sendpoints/(?P<da_id>\w+)/(?P<stem>.*)'%{'rep':root_endpoint} ),
+                           RequestRedirectionHandler),
+                          (url_path_join(web_app.settings['base_url'],
+                                         '/files%(rep)sendpoints/(?P<da_id>\w+)'%{'rep':root_endpoint} ),
                            RequestRedirectionHandler),
                           ])
 
