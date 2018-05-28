@@ -14,9 +14,10 @@ class JupyterDash:
         self.session_state = dict()
         self.app_state = dict()
         self.local_uuid = str(uuid.uuid4()).replace('-','')
-    def as_dash_instance(self):
+    def as_dash_instance(self, specific_identifier=None):
         # TODO perhaps cache this. If so, need to ensure updated if self.app_state changes
-        return self.dd.form_dash_instance(replacements=self.app_state)
+        return self.dd.form_dash_instance(replacements=self.app_state,
+                                          specific_identifier=specific_identifier)
 
     def get_session_state(self):
         return self.session_state
@@ -88,4 +89,55 @@ console.log(response);
     def _set_layout(self, layout):
         self.dd.layout = layout
     layout = property(_get_layout, _set_layout)
+
+
+    def process_view(self, view_name, args, app_path):
+        view_name = view_name.replace('-','_')
+        func = getattr(self,'rv_%s'%view_name, None)
+        if func is not None:
+            # TODO process app_path if needed
+            return func(args, app_path)
+        return ("<html><body>Unable to understand view name of %s with args %s</body></html>" %(view_name, args),"text/html")
+
+    def rv_(self, args, app_path):
+        mFunc = self.as_dash_instance(specific_identifier=app_path).locate_endpoint_function()
+        response = mFunc()
+        return(response,"text/html")
+
+    def rv__dash_layout(self, args, app_path):
+        dapp = self.as_dash_instance(specific_identifier=app_path)
+        with dapp.app_context():
+            mFunc = dapp.locate_endpoint_function('dash-layout')
+            resp = mFunc()
+            body, mimetype = dapp.augment_initial_layout(resp)
+            return (body, mimetype)
+
+    def rv__dash_dependencies(self, args, app_path):
+        dapp = self.as_dash_instance(specific_identifier=app_path)
+        with dapp.app_context():
+            mFunc = dapp.locate_endpoint_function('dash-dependencies')
+            resp = mFunc()
+            return (resp.data.decode('utf-8'), resp.mimetype)
+
+    def rv__dash_update_component(self, args, app_path):
+        dapp = self.as_dash_instance(specific_identifier=app_path)
+        if dapp.use_dash_dispatch():
+            mFunc = dapp.locate_endpoint_function('dash-update-component')
+            import flask
+            with dapp.test_request_context():
+                flask.request._cached_json = (args, flask.request._cached_json[True])
+                resp = mFunc()
+        else:
+            # Use direct dispatch with extra arguments in the argMap
+            app_state = self.get_session_state()
+            argMap = {}
+            argMap = {'dash_app_id': self.local_uuid,
+                      'dash_app': self,
+                      'user': None,
+                      'session_state': app_state}
+            resp = dapp.dispatch_with_args(args, argMap)
+            self.set_session_state(app_state)
+            self.handle_current_state()
+
+        return (resp.data.decode('utf-8'), resp.mimetype)
 
