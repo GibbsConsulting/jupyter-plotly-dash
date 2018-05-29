@@ -35,7 +35,7 @@ current_on_reply = ZMQChannelsHandler._on_zmq_reply
 
 @gen.coroutine
 def wrapped_get(self, kernel_id):
-    print("In wrapped get")
+    # TODO wrap in maybe_future
     yield current_get(self, kernel_id)
 
 def wrapped_on_message(self, msg):
@@ -48,7 +48,6 @@ def wrapped_on_message(self, msg):
     else:
         deser_msg = json.loads(msg)
         channel = deser_msg.get('channel',None)
-        #print("On message, channel is [%s]" % channel)
         header = deser_msg['header']
         msg_type = header.get('msg_type',"")
         if msg_type == 'comm_open' or msg_type == 'comm_msg':
@@ -56,9 +55,6 @@ def wrapped_on_message(self, msg):
             content = deser_msg['content']
             comm_id = content['comm_id']
             target_name = content.get('target_name',None)
-            if target_name is not None:
-                print("Comm msg with target name [%s]" % target_name)
-            print("Comm msg with id [%s] and msg id [%s]" % (comm_id, header.get('msg_id',None)))
 
             # Message will get sent to kernel. Here we also ensure we have a registration for future use and pull out the initial data info
 
@@ -85,20 +81,6 @@ def wrapped_on_message(self, msg):
         session.send(stream, m2)
 
     return com
-
-#In wrapped on reply, channel is [iopub] and type [comm_open]
-#[b'comm-348fa2dc3ab040d5b731ed1558a4f914']
-#[b'd4bb19e771c068ad9f2be2f0b6822b01b4e2a66c0be3a813c099949b1205b74f', b'{"version":"5.3","date":"2018-05-25T22:58:23.634359Z","session":"5150c95d-adfd68ac54c28dadb5c07d5d","username":"mark","msg_type":"comm_open","msg_id":"29d879f9-ba454246a1932b42b3474fb2"}', b'{"msg_id":"063fc02088274327bf53fbea35a3c07c","username":"username","session":"e2e68a00758c4d61bf439af9300ab4d9","msg_type":"execute_request","version":"5.2","date":"2018-05-25T22:58:23.624863Z"}', b'{}', b'{"data":{"jpd_type":"inform","da_id":"1234abcde"},"comm_id":"348fa2dc3ab040d5b731ed1558a4f914","target_name":"my_comm_target","target_module":null}']
-#<jupyter_client.session.Session object at 0x7fc75162c7f0>
-#Wrapped_on got a response
-#[b'comm-348fa2dc3ab040d5b731ed1558a4f914']
-#[b'd795f70a6afc0a6b385e007f91829475aebade40694f93079fcfcdc4cfb3910f', b'{"version":"5.3","date":"2018-05-25T22:58:24.319687Z","session":"5150c95d-adfd68ac54c28dadb5c07d5d","username":"mark","msg_type":"comm_msg","msg_id":"e5a5bae4-31dd6dc2f7ae3ce5657de46e"}', b'{"msg_id":"036ba77e429541858e2be62665dfdb7f","username":"username","session":"e2e68a00758c4d61bf439af9300ab4d9","msg_type":"execute_request","version":"5.2","date":"2018-05-25T22:58:24.312818Z"}', b'{}', b'{"data":{"jpd_type":"response","response":"this is thee response text","mimetype":"text/rubbish"},"comm_id":"348fa2dc3ab040d5b731ed1558a4f914"}']
-#<jupyter_client.session.Session object at 0x7fc75162c7f0>
-
-
-#[b'comm-1ebacdd11ea8412c919086229a0aefe1']
-#[b'6d7c546144970f15dcafdd784b81afee3b79218f8e64b17ac19d3f485955ab9e', b'{"version":"5.3","date":"2018-05-25T23:19:38.827992Z","session":"ac5a5074-ecc000ef670d5e3b7a082841","username":"mark","msg_type":"comm_open","msg_id":"6d39841c-977429df12dd49bcdc67d870"}', b'{"username":"","version":"5.2","session":"86ecacdaa685a9a424b1639550acdd26","msg_id":"394f991dc49f124f56120903c0257050","msg_type":"execute_request","date":"2018-05-25T23:19:38.819516Z"}', b'{}', b'{"data":{"jpd_type":"inform","da_id":"cebcd0279de84b95b330064f6466433a"},"comm_id":"1ebacdd11ea8412c919086229a0aefe1","target_name":"jupyter_plotly_dash","target_module":null}']
-
 
 def wrapped_on_reply(self, stream, msg_list):
     idents, fed_msg_list = self.session.feed_identities(msg_list)
@@ -129,10 +111,6 @@ def wrapped_on_reply(self, stream, msg_list):
                 except Exception as e:
                     print(e)
 
-                #print("In wrapped on reply, channel is [%s] and type [%s]" % (channel, msg_type))
-                #print("Informed")
-                #print(session, channel, shell_channel, username, session_id, version, comm_id, da_id)
-
                 RequestRedirectionHandler.register_comm(da_id,
                                                         {'session':session,
                                                          'channel':channel,
@@ -144,20 +122,13 @@ def wrapped_on_reply(self, stream, msg_list):
 
                 return
             if jpd_type == 'response':
-                print("Wrapped_on got a response")
-                print(idents)
-                print(fed_msg_list)
-                print(self.session)
                 parLoc = fed_msg_list[2].decode('utf-8')
                 jParLoc = json.loads(parLoc)
-                print(jParLoc)
                 corr_id = jParLoc['msg_id']
                 future = RequestRedirectionHandler.get_future_for_response(corr_id)
-                print(corr_id, future)
                 response = theData['response']
                 mimetype = theData['mimetype']
                 future_set_result_unless_cancelled(future,(response, mimetype))
-                print("Have set future :",future)
                 return
 
     except:
@@ -220,7 +191,6 @@ class RequestRedirectionHandler(IPythonHandler):
     def send_with_pause(self, da_id, stem, args, src_type):
 
         #reg_app = RequestRedirectionHandler.registered_apps.get(da_id, {})
-        #print("Sending %s to %s" % (reg_app, da_id))
 
         # Construct and send a session message as a Comm
         # and add a future to the list of those waiting for a response from the kernel
@@ -254,12 +224,8 @@ class RequestRedirectionHandler(IPythonHandler):
             comm_bag['session'].send(comm_bag['shell_channel'],
                                      msg)
 
-            print("Pausing onm responmse for %s"%corr_id)
             response, mime_type = yield self.get_future_for_response(corr_id)
-            print("Response")
-            print(response, mime_type)
             del self.outstanding_responses[corr_id]
-            print("Future deleted")
 
         else:
             response = str('{"re":"RequestRedirectionHandler [%s] [%s] args [%s] from [%s]"}' % (da_id, stem, args, src_type))
