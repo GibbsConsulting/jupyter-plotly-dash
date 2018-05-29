@@ -84,18 +84,20 @@ class JupyterDash:
         if view_name == None:
             view_name = ''
         view_name = view_name.replace('-','_')
+        view_name_parts = view_name.split('/')
+        view_name = view_name_parts[0]
         func = getattr(self,'rv_%s'%view_name, None)
         if func is not None:
             # TODO process app_path if needed
-            return func(args, app_path)
+            return func(args, app_path, view_name_parts)
         return ("<html><body>Unable to understand view name of %s with args %s</body></html>" %(view_name, args),"text/html")
 
-    def rv_(self, args, app_path):
+    def rv_(self, args, app_path, view_name_parts):
         mFunc = self.as_dash_instance(specific_identifier=app_path).locate_endpoint_function()
         response = mFunc()
         return(response,"text/html")
 
-    def rv__dash_layout(self, args, app_path):
+    def rv__dash_layout(self, args, app_path, view_name_parts):
         dapp = self.as_dash_instance(specific_identifier=app_path)
         with dapp.app_context():
             mFunc = dapp.locate_endpoint_function('dash-layout')
@@ -103,14 +105,14 @@ class JupyterDash:
             body, mimetype = dapp.augment_initial_layout(resp)
             return (body, mimetype)
 
-    def rv__dash_dependencies(self, args, app_path):
+    def rv__dash_dependencies(self, args, app_path, view_name_parts):
         dapp = self.as_dash_instance(specific_identifier=app_path)
         with dapp.app_context():
             mFunc = dapp.locate_endpoint_function('dash-dependencies')
             resp = mFunc()
             return (resp.data.decode('utf-8'), resp.mimetype)
 
-    def rv__dash_update_component(self, args, app_path):
+    def rv__dash_update_component(self, args, app_path, view_name_parts):
         dapp = self.as_dash_instance(specific_identifier=app_path)
         if dapp.use_dash_dispatch():
             mFunc = dapp.locate_endpoint_function('dash-update-component')
@@ -133,3 +135,5 @@ class JupyterDash:
 
         return (resp.data.decode('utf-8'), resp.mimetype)
 
+    def rv__dash_component_suites(self, args, app_path, view_name_parts):
+        return ("<html><body>Requested %s at %s with %s</body></html>" %(args,app_path,view_name_parts),"text/html")
