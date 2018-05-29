@@ -1,0 +1,2 @@
+django-plotly-dash
+jupyter-plotly-dash
