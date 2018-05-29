@@ -1,7 +1,7 @@
 {
     "NotebookApp" : {
         "nbserver_extensions": {
-            "jupyter_plotly_dash.nbsrvext": true
+            "jupyter_plotly_dash.serverext": true
         }
     }
 }

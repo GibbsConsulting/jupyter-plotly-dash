@@ -299,7 +299,3 @@ def load_jupyter_server_extension(nb_app):
                            RequestRedirectionHandler),
                           ])
 
-def _jupyter_server_extension_paths():
-    return [{
-        "module" : "jupyter_plotly_dash.nbsrvext"
-        }]
