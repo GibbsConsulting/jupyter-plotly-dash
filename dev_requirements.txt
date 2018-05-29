@@ -31,7 +31,6 @@ jupyter==1.0.0
 jupyter-client==5.2.3
 jupyter-console==5.2.0
 jupyter-core==4.4.0
--e git+https://delsim@github.com/delsim/jupyter-plotly-dash.git@ff5d9d118f1daee7dfd35bfd83377ca09c8a7f21#egg=jupyter_plotly_dash
 livereload==2.5.2
 Markdown==2.6.11
 MarkupSafe==1.0
