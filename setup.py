@@ -35,6 +35,8 @@ setup(
     },
     install_requires = ['django-plotly-dash',
                         'jupyter',
+                        'aiohttp',
+                        'nbserverproxy',
                         ],
     python_requires=">=3.6",
     data_files = [

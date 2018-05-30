@@ -18,7 +18,8 @@ class JupyterDash:
     def as_dash_instance(self, specific_identifier=None):
         # TODO perhaps cache this. If so, need to ensure updated if self.app_state changes
         return self.dd.form_dash_instance(replacements=self.app_state,
-                                          specific_identifier=specific_identifier)
+                                          specific_identifier=specific_identifier,
+                                          stub="/proxy/%s"%self.gav.port)
 
     def get_session_state(self):
         return self.session_state
@@ -48,12 +49,14 @@ class JupyterDash:
         return self.local_uuid
     def get_app_root_url(self):
         if True:
+            return '/proxy/%s%s' %(self.gav.port, self.get_base_pathname(self.dd._uid))
+        if True:
             return "/app/endpoints/%s/" % (self.session_id())
         return 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
 
     def _repr_html_(self):
         url = self.get_app_root_url()
-        local_url = 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
+        #local_url = 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
         da_id = self.session_id()
         comm = locate_jpd_comm(da_id, self)
         external = self.add_external_link and '<hr/><a href="{url}" target="_new">Open in new window</a>'.format(url=url) or ""
@@ -62,7 +65,7 @@ class JupyterDash:
   <iframe src="%(url)s" width=%(width)s height=%(height)s %(frame)s></iframe>
   %(external)s
 </div>''' %{'url' : url,
-            'local_url' : local_url,
+            #'local_url' : local_url,
             'da_id' : da_id,
             'external' : external,
             'width' : self.width,

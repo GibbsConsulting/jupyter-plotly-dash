@@ -76,6 +76,7 @@ class AsyncViews:
         else:
             # Use direct dispatch with extra arguments in the argMap
             app_state = da.get_session_state()
+            app_state['call_count'] = app_state.get('call_count',0) + 1
             argMap = {}
             argMap = {'dash_app_id': iden,
                       'dash_app': da,
