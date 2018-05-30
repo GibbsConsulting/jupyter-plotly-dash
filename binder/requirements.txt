@@ -1,2 +1,4 @@
+aiohttp
+nbserverproxy
 django-plotly-dash
 jupyter-plotly-dash

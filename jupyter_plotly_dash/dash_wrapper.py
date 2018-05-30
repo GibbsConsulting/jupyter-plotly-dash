@@ -15,11 +15,15 @@ class JupyterDash:
         self.session_state = dict()
         self.app_state = dict()
         self.local_uuid = str(uuid.uuid4()).replace('-','')
+        self.use_nbproxy = False
     def as_dash_instance(self, specific_identifier=None):
+        stub = None
+        if self.use_nbproxy:
+            stub = "/proxy/%s"%self.gav.port
         # TODO perhaps cache this. If so, need to ensure updated if self.app_state changes
         return self.dd.form_dash_instance(replacements=self.app_state,
                                           specific_identifier=specific_identifier,
-                                          stub="/proxy/%s"%self.gav.port)
+                                          stub=stub)
 
     def get_session_state(self):
         return self.session_state
@@ -49,9 +53,9 @@ class JupyterDash:
         return self.local_uuid
     def get_app_root_url(self):
         if True:
-            return '/proxy/%s%s' %(self.gav.port, self.get_base_pathname(self.dd._uid))
-        if True:
             return "/app/endpoints/%s/" % (self.session_id())
+        if self.use_nbproxy:
+            return '/proxy/%s%s' %(self.gav.port, self.get_base_pathname(self.dd._uid))
         return 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
 
     def _repr_html_(self):
