@@ -16,14 +16,21 @@ class JupyterDash:
         self.app_state = dict()
         self.local_uuid = str(uuid.uuid4()).replace('-','')
         self.use_nbproxy = False
-    def as_dash_instance(self, specific_identifier=None):
-        stub = None
-        if self.use_nbproxy:
-            stub = "/proxy/%s"%self.gav.port
+    def as_dash_instance(self, specific_identifier=None, base_pathname=None):
+
+        if base_pathname is None:
+            base_pathname = self.get_base_pathname(specific_identifier)
+            specific_identifier = self.session_id()
+        else:
+            if base_pathname[0] != '/':
+                base_pathname = "/%s" % base_pathname
+            if base_pathname[-1] != '/':
+                base_pathname = "%s/" % base_pathname
+
         # TODO perhaps cache this. If so, need to ensure updated if self.app_state changes
         return self.dd.form_dash_instance(replacements=self.app_state,
-                                          specific_identifier=specific_identifier,
-                                          stub=stub)
+                                          ndid = specific_identifier,
+                                          base_pathname = base_pathname)
 
     def get_session_state(self):
         return self.session_state
@@ -48,26 +55,45 @@ class JupyterDash:
         return entry is not None
 
     def get_base_pathname(self, specific_identifier):
-        return '/%s/' % specific_identifier
+        the_id = specific_identifier and specific_identifier or self.session_id()
+        if self.use_nbproxy:
+            return '/proxy/%i/%s/' %(self.gav.port, self.dd._uid)
+        return "/app/endpoints/%s/" % the_id
+
     def session_id(self):
         return self.local_uuid
     def get_app_root_url(self):
-        if True:
-            return "/app/endpoints/%s/" % (self.session_id())
         if self.use_nbproxy:
-            return '/proxy/%s%s' %(self.gav.port, self.get_base_pathname(self.dd._uid))
-        return 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
+            return self.get_base_pathname(self.session_id())
+            #return "http://localhost:8888%s" % self.get_base_pathname(self.session_id())
+        return self.get_base_pathname(self.session_id())
 
+    def url_prefix(self, port=8888):
+        import os
+        jh_serv_pref = os.environ.get('JUPYTERHUB_SERVICE_PREFIX',None)
+        if jh_serv_pref is None:
+            return "http://localhost:%i" % port
+        return "https://hub.mybinder.org/%s/proxy/%i/" %(jh_serv_pref, port)
+
+    #in_binder ='JUPYTERHUB_SERVICE_PREFIX' in os.environ if in_binder is None else in_binder
+    #if in_binder:
+    #    base_prefix = '{}proxy/{}/'.format(os.environ['JUPYTERHUB_SERVICE_PREFIX'], port)
+    #    url = 'https://hub.mybinder.org{}'.format(base_prefix)
+    #    app.config.requests_pathname_prefix = base_prefix
+    #else:
+    #    url = 'http://localhost:%d' % port
+
+    def __html__(self):
+        return self._repr_html_()
     def _repr_html_(self):
         url = self.get_app_root_url()
-        #local_url = 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
         da_id = self.session_id()
         comm = locate_jpd_comm(da_id, self)
         external = self.add_external_link and '<hr/><a href="{url}" target="_new">Open in new window</a>'.format(url=url) or ""
         fb = 'frameborder="%i"' %(self.frame and 1 or 0)
         iframe = '''<div>
   <iframe src="%(url)s" width=%(width)s height=%(height)s %(frame)s></iframe>
-  %(external)s
+  %(external)s for %(url)s
 </div>''' %{'url' : url,
             #'local_url' : local_url,
             'da_id' : da_id,
@@ -97,15 +123,17 @@ class JupyterDash:
         if func is not None:
             # TODO process app_path if needed
             return func(args, app_path, view_name_parts)
-        return ("<html><body>Unable to understand view name of %s with args %s</body></html>" %(view_name, args),"text/html")
+        return ("<html><body>Unable to understand view name of %s with args %s and app path %s</body></html>" %(view_name, args, app_path),"text/html")
 
     def rv_(self, args, app_path, view_name_parts):
-        mFunc = self.as_dash_instance(specific_identifier=app_path).locate_endpoint_function()
+        if True and False:
+            return ("<html><budy> App Path is [%s] </body></html>"%app_path,"text/html")
+        mFunc = self.as_dash_instance(base_pathname=app_path).locate_endpoint_function()
         response = mFunc()
         return(response,"text/html")
 
     def rv__dash_layout(self, args, app_path, view_name_parts):
-        dapp = self.as_dash_instance(specific_identifier=app_path)
+        dapp = self.as_dash_instance(base_pathname=app_path)
         with dapp.app_context():
             mFunc = dapp.locate_endpoint_function('dash-layout')
             resp = mFunc()
@@ -113,14 +141,14 @@ class JupyterDash:
             return (body, mimetype)
 
     def rv__dash_dependencies(self, args, app_path, view_name_parts):
-        dapp = self.as_dash_instance(specific_identifier=app_path)
+        dapp = self.as_dash_instance(base_pathname=app_path)
         with dapp.app_context():
             mFunc = dapp.locate_endpoint_function('dash-dependencies')
             resp = mFunc()
             return (resp.data.decode('utf-8'), resp.mimetype)
 
     def rv__dash_update_component(self, args, app_path, view_name_parts):
-        dapp = self.as_dash_instance(specific_identifier=app_path)
+        dapp = self.as_dash_instance(base_pathname=app_path)
         if dapp.use_dash_dispatch():
             mFunc = dapp.locate_endpoint_function('dash-update-component')
             import flask
