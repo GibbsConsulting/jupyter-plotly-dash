@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import jupyter_plotly_dash as dpd
 
@@ -19,9 +19,7 @@ setup(
     author="Gibbs Consulting",
     author_email="jupyter_plotly_dash@gibbsconsulting.ca",
     license='MIT',
-    packages=[
-    'jupyter_plotly_dash',
-    ],
+    packages=find_packages(),
     classifiers = [
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
@@ -38,6 +36,7 @@ setup(
     install_requires = ['django-plotly-dash',
                         'jupyter',
                         'aiohttp',
+                        'nbserverproxy',
                         ],
     python_requires=">=3.6",
     data_files = [

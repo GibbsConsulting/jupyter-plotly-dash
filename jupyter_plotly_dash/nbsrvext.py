@@ -265,7 +265,7 @@ class JPDHandler(IPythonHandler):
         args = self.find_args()
         self.finish(RequestRedirectionHandler.register_instance(da_id, args))
 
-def load_jupyter_server_extension(nb_app):
+def do_load_jupyter_server_extension(nb_app):
 
     web_app = nb_app.web_app
 
@@ -299,7 +299,3 @@ def load_jupyter_server_extension(nb_app):
                            RequestRedirectionHandler),
                           ])
 
-def _jupyter_server_extension_paths():
-    return [{
-        "module" : "jupyter_plotly_dash.nbsrvext"
-        }]

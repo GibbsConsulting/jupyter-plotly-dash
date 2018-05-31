@@ -15,10 +15,15 @@ class JupyterDash:
         self.session_state = dict()
         self.app_state = dict()
         self.local_uuid = str(uuid.uuid4()).replace('-','')
+        self.use_nbproxy = False
     def as_dash_instance(self, specific_identifier=None):
+        stub = None
+        if self.use_nbproxy:
+            stub = "/proxy/%s"%self.gav.port
         # TODO perhaps cache this. If so, need to ensure updated if self.app_state changes
         return self.dd.form_dash_instance(replacements=self.app_state,
-                                          specific_identifier=specific_identifier)
+                                          specific_identifier=specific_identifier,
+                                          stub=stub)
 
     def get_session_state(self):
         return self.session_state
@@ -49,11 +54,13 @@ class JupyterDash:
     def get_app_root_url(self):
         if True:
             return "/app/endpoints/%s/" % (self.session_id())
+        if self.use_nbproxy:
+            return '/proxy/%s%s' %(self.gav.port, self.get_base_pathname(self.dd._uid))
         return 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
 
     def _repr_html_(self):
         url = self.get_app_root_url()
-        local_url = 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
+        #local_url = 'http://localhost:%i%s' % (self.gav.port, self.get_base_pathname(self.dd._uid))
         da_id = self.session_id()
         comm = locate_jpd_comm(da_id, self)
         external = self.add_external_link and '<hr/><a href="{url}" target="_new">Open in new window</a>'.format(url=url) or ""
@@ -62,7 +69,7 @@ class JupyterDash:
   <iframe src="%(url)s" width=%(width)s height=%(height)s %(frame)s></iframe>
   %(external)s
 </div>''' %{'url' : url,
-            'local_url' : local_url,
+            #'local_url' : local_url,
             'da_id' : da_id,
             'external' : external,
             'width' : self.width,
@@ -84,18 +91,20 @@ class JupyterDash:
         if view_name == None:
             view_name = ''
         view_name = view_name.replace('-','_')
+        view_name_parts = view_name.split('/')
+        view_name = view_name_parts[0]
         func = getattr(self,'rv_%s'%view_name, None)
         if func is not None:
             # TODO process app_path if needed
-            return func(args, app_path)
+            return func(args, app_path, view_name_parts)
         return ("<html><body>Unable to understand view name of %s with args %s</body></html>" %(view_name, args),"text/html")
 
-    def rv_(self, args, app_path):
+    def rv_(self, args, app_path, view_name_parts):
         mFunc = self.as_dash_instance(specific_identifier=app_path).locate_endpoint_function()
         response = mFunc()
         return(response,"text/html")
 
-    def rv__dash_layout(self, args, app_path):
+    def rv__dash_layout(self, args, app_path, view_name_parts):
         dapp = self.as_dash_instance(specific_identifier=app_path)
         with dapp.app_context():
             mFunc = dapp.locate_endpoint_function('dash-layout')
@@ -103,14 +112,14 @@ class JupyterDash:
             body, mimetype = dapp.augment_initial_layout(resp)
             return (body, mimetype)
 
-    def rv__dash_dependencies(self, args, app_path):
+    def rv__dash_dependencies(self, args, app_path, view_name_parts):
         dapp = self.as_dash_instance(specific_identifier=app_path)
         with dapp.app_context():
             mFunc = dapp.locate_endpoint_function('dash-dependencies')
             resp = mFunc()
             return (resp.data.decode('utf-8'), resp.mimetype)
 
-    def rv__dash_update_component(self, args, app_path):
+    def rv__dash_update_component(self, args, app_path, view_name_parts):
         dapp = self.as_dash_instance(specific_identifier=app_path)
         if dapp.use_dash_dispatch():
             mFunc = dapp.locate_endpoint_function('dash-update-component')
@@ -133,3 +142,5 @@ class JupyterDash:
 
         return (resp.data.decode('utf-8'), resp.mimetype)
 
+    def rv__dash_component_suites(self, args, app_path, view_name_parts):
+        return ("<html><body>Requested %s at %s with %s</body></html>" %(args,app_path,view_name_parts),"text/html")
