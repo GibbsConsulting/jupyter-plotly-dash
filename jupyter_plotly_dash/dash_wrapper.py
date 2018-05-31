@@ -78,25 +78,12 @@ class JupyterDash:
         # TODO restrict use of use_nbproxy here
         return "%s%s" %(jh_serv_pref, self.get_base_pathname(self.session_id())[1:])
 
-    def url_prefix(self, port=8888, add_port=False):
-        jh_serv_pref = os.environ.get('JUPYTERHUB_SERVICE_PREFIX',None)
-        if jh_serv_pref is None:
-            add_port_part = ""
-            if add_port:
-                add_port_part = ":%i" % port
-            return "http://localhost%s" % add_port_part
-
-        if True: # ignore the location root, always add port
-            return "%sproxy/%i/" %(jh_serv_pref, port)
-
-        return "https://hub.mybinder.org%sproxy/%i/" %(jh_serv_pref, port)
-
     def __html__(self):
         return self._repr_html_()
     def _repr_html_(self):
         url = self.get_app_root_url()
         da_id = self.session_id()
-        comm = locate_jpd_comm(da_id, self)
+        comm = locate_jpd_comm(da_id, self, url[1:-1])
         external = self.add_external_link and '<hr/><a href="{url}" target="_new">Open in new window</a>'.format(url=url) or ""
         fb = 'frameborder="%i"' %(self.frame and 1 or 0)
         iframe = '''<div>
