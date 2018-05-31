@@ -76,7 +76,7 @@ class JupyterDash:
 
         # Running on a binder or similar
         # TODO restrict use of use_nbproxy here
-        return "%s%s" %(jh_serv_pref, self.get_base_pathname(self.session_id()))
+        return "%s%s" %(jh_serv_pref, self.get_base_pathname(self.session_id())[1:])
 
     def url_prefix(self, port=8888, add_port=False):
         jh_serv_pref = os.environ.get('JUPYTERHUB_SERVICE_PREFIX',None)
