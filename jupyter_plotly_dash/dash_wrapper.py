@@ -2,6 +2,7 @@ from .async_views import AsyncViews, get_global_av
 from .nbkernel import locate_jpd_comm
 from django_plotly_dash import DjangoDash
 import uuid
+import os
 
 class JupyterDash:
     def __init__(self, name, gav=None, width=800, height=600):
@@ -57,31 +58,38 @@ class JupyterDash:
     def get_base_pathname(self, specific_identifier):
         the_id = specific_identifier and specific_identifier or self.session_id()
         if self.use_nbproxy:
+            # TODO this should be the_id not the uid?
             return '/proxy/%i/%s/' %(self.gav.port, self.dd._uid)
         return "/app/endpoints/%s/" % the_id
 
     def session_id(self):
         return self.local_uuid
-    def get_app_root_url(self):
-        if self.use_nbproxy:
-            return self.get_base_pathname(self.session_id())
-            #return "http://localhost:8888%s" % self.get_base_pathname(self.session_id())
-        return self.get_base_pathname(self.session_id())
 
-    def url_prefix(self, port=8888):
-        import os
+    def get_app_root_url(self):
+
+        # Local (not binder use) determined by presence of server prefix
+        jh_serv_pref = os.environ.get('JUPYTERHUB_SERVICE_PREFIX',None)
+
+        if jh_serv_pref is None:
+            # Local use, root is given by proxy flag
+            return self.get_base_pathname(self.session_id())
+
+        # Running on a binder or similar
+        # TODO restrict use of use_nbproxy here
+        return "%s%s" %(jh_serv_pref, self.get_base_pathname(self.session_id()))
+
+    def url_prefix(self, port=8888, add_port=False):
         jh_serv_pref = os.environ.get('JUPYTERHUB_SERVICE_PREFIX',None)
         if jh_serv_pref is None:
-            return "http://localhost:%i" % port
-        return "https://hub.mybinder.org/%s/proxy/%i/" %(jh_serv_pref, port)
+            add_port_part = ""
+            if add_port:
+                add_port_part = ":%i" % port
+            return "http://localhost%s" % add_port_part
 
-    #in_binder ='JUPYTERHUB_SERVICE_PREFIX' in os.environ if in_binder is None else in_binder
-    #if in_binder:
-    #    base_prefix = '{}proxy/{}/'.format(os.environ['JUPYTERHUB_SERVICE_PREFIX'], port)
-    #    url = 'https://hub.mybinder.org{}'.format(base_prefix)
-    #    app.config.requests_pathname_prefix = base_prefix
-    #else:
-    #    url = 'http://localhost:%d' % port
+        if True: # ignore the location root, always add port
+            return "%sproxy/%i/" %(jh_serv_pref, port)
+
+        return "https://hub.mybinder.org%sproxy/%i/" %(jh_serv_pref, port)
 
     def __html__(self):
         return self._repr_html_()
