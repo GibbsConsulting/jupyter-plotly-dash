@@ -1,2 +1,3 @@
-django-plotly-dash
 jupyter-plotly-dash
+nbserverproxy
+tornado >=5
