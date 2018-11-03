@@ -1,5 +1,5 @@
 #!/bin/bash
 #
 #pip install -U tornado
-pip uninstall prompt_toolkit
-pip install prompt-toolkit
+pip uninstall -y prompt-toolkit
+#pip install prompt-toolkit
