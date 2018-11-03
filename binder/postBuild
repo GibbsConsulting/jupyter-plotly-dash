@@ -2,4 +2,4 @@
 #
 #pip install -U tornado
 pip uninstall -y prompt-toolkit
-pip install prompt-toolkit<2
+pip install 'prompt-toolkit<2'
