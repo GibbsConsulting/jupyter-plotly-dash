@@ -2,7 +2,6 @@ aiohttp
 grip
 pylint
 pytest>=3.6
-pytest-django
 pytest-cov
 sphinx
 sphinx-autobuild
