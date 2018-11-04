@@ -1,3 +1,4 @@
+aiohttp
 grip
 pylint
 pytest>=3.6
