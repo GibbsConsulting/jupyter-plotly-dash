@@ -1,4 +1,5 @@
 aiohttp
+attrs>=17.4.0
 grip
 pylint
 pytest>=3.6
