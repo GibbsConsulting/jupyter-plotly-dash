@@ -1,5 +1,7 @@
 # jupyter-plotly-dash
 
+![Develop Branch Build Status](https://travis-ci.org/GibbsConsulting/jupyter-plotly-dash.svg?branch=master)
+
 Allow use of [plotly dash](https://plot.ly/products/dash/) applications within Jupyter notebooks, with the management of both session and internal state.
 
 See the source for this project here:

@@ -1,0 +1,15 @@
+# Travis CI
+language: python
+
+python:
+  - "3.6"
+
+cache:
+  - pip
+
+install:
+  - pip install -r requirements.txt
+  - pip install -r dev_requirements.txt
+
+script:
+ - pytest jupyter_plotly_dash --cov=jupyter_plotly_dash --cov-report term-missing
