@@ -4,6 +4,7 @@ grip
 pylint
 pytest>=3.6
 pytest-cov
+python-coveralls
 sphinx
 sphinx-autobuild
 twine
