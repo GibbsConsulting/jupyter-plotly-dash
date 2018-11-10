@@ -13,3 +13,6 @@ install:
 
 script:
  - pytest jupyter_plotly_dash --cov=jupyter_plotly_dash --cov-report term-missing
+
+after_success:
+  - coveralls
