@@ -1,6 +1,7 @@
 # jupyter-plotly-dash
 
 [![PyPI version](https://badge.fury.io/py/jupyter-plotly-dash.svg)](https://badge.fury.io/py/jupyter-plotly-dash)
+[![Downloads](https://img.shields.io/pypi/dw/jupyter-plotly-dash.svg)](https://img.shields.io/pypi/dw/jupyter-plotly-dash.svg)
 ![Develop Branch Build Status](https://travis-ci.org/GibbsConsulting/jupyter-plotly-dash.svg?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/GibbsConsulting/jupyter-plotly-dash/badge.svg?branch=master)](https://coveralls.io/github/GibbsConsulting/jupyter-plotly-dash?branch=master)
 
