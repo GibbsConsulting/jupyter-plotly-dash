@@ -1,8 +1,10 @@
 # jupyter-plotly-dash
 
 [![PyPI version](https://badge.fury.io/py/jupyter-plotly-dash.svg)](https://badge.fury.io/py/jupyter-plotly-dash)
+[![Downloads](https://img.shields.io/pypi/dw/jupyter-plotly-dash.svg)](https://img.shields.io/pypi/dw/jupyter-plotly-dash.svg)
 ![Develop Branch Build Status](https://travis-ci.org/GibbsConsulting/jupyter-plotly-dash.svg?branch=master)
 [![Coverage Status](https://coveralls.io/repos/github/GibbsConsulting/jupyter-plotly-dash/badge.svg?branch=master)](https://coveralls.io/github/GibbsConsulting/jupyter-plotly-dash?branch=master)
+[![Documentation Status](https://readthedocs.org/projects/jupyter-plotly-dash/badge/?version=latest)](https://jupyter-plotly-dash.readthedocs.io/en/latest/?badge=latest)
 
 Allow use of [plotly dash](https://plot.ly/products/dash/) applications within Jupyter notebooks, with the management of both session and internal state.
 
