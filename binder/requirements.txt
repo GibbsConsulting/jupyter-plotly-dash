@@ -1,3 +1,2 @@
 jupyter-plotly-dash
-nbserverproxy
 tornado >=5
