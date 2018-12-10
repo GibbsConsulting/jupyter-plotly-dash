@@ -4,14 +4,15 @@ from setuptools import setup, find_packages
 
 import jupyter_plotly_dash as dpd
 
-VERSION = dpd.__version__
+with open('django_plotly_dash/version.py') as f:
+    exec(f.read())
 
 with open('README.md') as f:
     long_description = f.read()
 
 setup(
     name="jupyter-plotly-dash",
-    version=VERSION,
+    version=__version__,
     url="https://github.com/GibbsConsulting/jupyter-plotly-dash",
     description="Interactive Jupyter use of plotly dash apps",
     long_description=long_description,
