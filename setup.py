@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-import jupyter_plotly_dash as dpd
+# import jupyter_plotly_dash as dpd
 
 with open('jupyter_plotly_dash/version.py') as f:
     exec(f.read())
