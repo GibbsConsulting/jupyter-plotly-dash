@@ -12,9 +12,12 @@ The contributor agreement is very similar to other agreements, such as that used
 foundation](https://www.djangoproject.com/foundation/cla/) and
 [Apache software foundation](http://www.apache.org/licenses/icla.pdf).
 
-The [individual contributor license agreement](https://github.com/GibbsConsulting/jupyter-plotly-dash/blob/master/agreements/icla.html) (and
-the [corporate contributor license agreement](https://github.com/GibbsConsulting/jupyter-plotly-dash/blob/master/agreements/ccla.html), if needed) should be
+The [individual contributor license agreement](https://github.com/GibbsConsulting/jupyter-plotly-dash/blob/master/agreements/icla.pdf) (and
+the [corporate contributor license agreement](https://github.com/GibbsConsulting/jupyter-plotly-dash/blob/master/agreements/ccla.pdf), if needed) should be
 downloaded and a scan of the completed and signed document sent by email to <agreements@gibbsconsulting.ca>.
+
+Contributors are also listed in the [CONTRIBUTORS.md](https://github.com/GibbsConsulting/jupyter-plotly-dash/blob/master/CONTRIBUTORS.md) file
+in the root directory of the code repository.
 
 The information given here outlines the steps needed for a contribution to be accepted and is not legal advice.
 If you want legal advice, you should consult your own legal advisor.
