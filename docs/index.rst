@@ -18,3 +18,5 @@ Contents
    introduction
    installation
    usage
+   development
+
