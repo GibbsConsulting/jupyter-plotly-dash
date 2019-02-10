@@ -27,9 +27,16 @@ To build and release the packages::
 Contributions
 -------------
 
-See the CONTRIBUTIONS.md file in the code repository for details.
+Contributions are welcome. However, contributors must enter into a contributor agreement.
+
+See the `CONTRIBUTIONS.md <https://github.com/GibbsConsulting/latest/CONTRIBUTIONS.md>`_ file in the code repository for details.
+
+The repository also contains a list of `contributors <https://github.com/GibbsConsulting/latest/CONTRIBUTORS.md>`_.
 
 .. _bug_reporting:
+
+Bug reporting
+-------------
 
 The ideal bug report is a pull request containing the addition of a failing test exhibiting the problem
 to the test suite. However, this rarely happens in practice!
