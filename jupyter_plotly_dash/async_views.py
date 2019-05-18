@@ -107,8 +107,15 @@ class AsyncViews:
             da.set_session_state(app_state)
             da.handle_current_state()
 
-        return web.Response(body=resp.data,
-                            content_type=resp.mimetype)
+        try:
+            body = resp.data
+            content_type = resp.mimetype
+        except:
+            body = resp
+            content_type = "application/json"
+
+        return web.Response(body=body,
+                            content_type=content_type)
 
     async def routes(self, request):
         print("In routes")
