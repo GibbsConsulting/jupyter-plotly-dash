@@ -19,11 +19,15 @@
 #    along with jupyter-plotly-dash.  If not, see <https://www.gnu.org/licenses/>.
 #
 
+import uuid
+import os
+
 from .async_views import AsyncViews, get_global_av
 from .nbkernel import locate_jpd_comm
 from django_plotly_dash import DjangoDash
-import uuid
-import os
+from django.conf import settings
+
+settings.configure()
 
 class JupyterDash:
     def __init__(self, name, gav=None, width=800, height=600):
@@ -184,7 +188,14 @@ class JupyterDash:
             self.set_session_state(app_state)
             self.handle_current_state()
 
-        return (resp.data.decode('utf-8'), resp.mimetype)
+        try:
+            rdata = resp.data
+            rtype = resp.mimetype
+        except:
+            rdata = resp
+            rtype = "application/json"
+
+        return (rdata, rtype)
 
     def rv__dash_component_suites(self, args, app_path, view_name_parts):
         return ("<html><body>Requested %s at %s with %s</body></html>" %(args,app_path,view_name_parts),"text/html")
