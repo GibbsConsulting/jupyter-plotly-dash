@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#
+# Run test and linter steps
+#
+source env/bin/activate
+#
+pytest jupyter_plotly_dash --cov=jupyter_plotly_dash --cov-report term-missing
+pylint jupyter_plotly_dash
