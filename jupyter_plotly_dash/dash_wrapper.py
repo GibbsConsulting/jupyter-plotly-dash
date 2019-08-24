@@ -109,13 +109,12 @@ class JupyterDash:
         url = self.get_app_root_url()
         da_id = self.session_id()
         comm = locate_jpd_comm(da_id, self, url[1:-1])
-        external = self.add_external_link and '<hr/><a href="{url}" target="_new">Open in new window</a>'.format(url=url) or ""
+        external = self.add_external_link and '<hr/><a href="{url}" target="_new">Open in new window</a> for {url}'.format(url=url) or ""
         fb = 'frameborder="%i"' %(self.frame and 1 or 0)
         iframe = '''<div>
   <iframe src="%(url)s" width=%(width)s height=%(height)s %(frame)s></iframe>
-  %(external)s for %(url)s
+  %(external)s
 </div>''' %{'url' : url,
-            #'local_url' : local_url,
             'da_id' : da_id,
             'external' : external,
             'width' : self.width,
