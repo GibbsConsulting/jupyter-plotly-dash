@@ -27,7 +27,11 @@ from .nbkernel import locate_jpd_comm
 from django_plotly_dash import DjangoDash
 from django.conf import settings
 
-settings.configure()
+try:
+    # Try to load settings
+    settings.configure()
+except:
+    pass
 
 class JupyterDash:
     def __init__(self, name, gav=None, width=800, height=600):
