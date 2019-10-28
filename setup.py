@@ -25,6 +25,7 @@ setup(
     'License :: OSI Approved :: GNU Affero General Public License v3',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.6',
+    'Framework :: Dash',
     ],
     keywords='Jupyter plotly plotly-dash dash dashboard django-plotly-dash Django',
     project_urls = {
