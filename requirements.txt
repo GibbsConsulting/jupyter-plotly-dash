@@ -1,4 +1,6 @@
 aiohttp
+dpd-static-components
+django-bootstrap4
 django-plotly-dash
 jupyter
 nbserverproxy

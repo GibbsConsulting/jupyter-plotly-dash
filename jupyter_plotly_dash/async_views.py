@@ -33,6 +33,7 @@ class AsyncViews:
                     web.get('/{id}/_dash-layout', self.layout),
                     web.post('/{id}/_dash-update-component', self.update),
                     web.get('/{id}/_dash-routes', self.routes),
+                    web.get('/{id}/_dash-component-suites', self.component_suites),
                    ])
 
         self.launch_task = asyncio.Task(self.launch_it(self.app, self.port))
@@ -72,6 +73,15 @@ class AsyncViews:
         iden = request.match_info['id']
         da, dapp = self.get_app_by_name(iden)
         mFunc = dapp.locate_endpoint_function('dash-layout')
+        resp = mFunc()
+        body, mimetype = dapp.augment_initial_layout(resp)
+        return web.Response(body=body,
+                            content_type=mimetype)
+
+    async def component_suites(self, request):
+        iden = request.match_info['id']
+        da, dapp = self.get_app_by_name(iden)
+        mFunc = dapp.locate_endpoint_function('dash-component-component-suites')
         resp = mFunc()
         body, mimetype = dapp.augment_initial_layout(resp)
         return web.Response(body=body,
