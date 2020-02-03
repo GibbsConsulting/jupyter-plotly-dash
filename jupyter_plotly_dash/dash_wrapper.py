@@ -34,8 +34,12 @@ except:
     pass
 
 class JupyterDash:
-    def __init__(self, name, gav=None, width=800, height=600):
-        self.dd = DjangoDash(name)
+    def __init__(self, name, gav=None, width=800, height=600,
+                 add_bootstrap_links=False,
+                 serve_locally=None):
+        self.dd = DjangoDash(name,
+                             serve_locally=serve_locally,
+                             add_bootstrap_links=add_bootstrap_links)
         self.gav = gav and gav or get_global_av()
         self.gav.add_application(self, name)
         self.width = width
@@ -139,18 +143,17 @@ class JupyterDash:
     def process_view(self, view_name, args, app_path):
         if view_name == None:
             view_name = ''
-        view_name = view_name.replace('-','_')
         view_name_parts = view_name.split('/')
         view_name = view_name_parts[0]
+        view_name = view_name.replace('-','_')
         func = getattr(self,'rv_%s'%view_name, None)
         if func is not None:
             # TODO process app_path if needed
-            return func(args, app_path, view_name_parts)
+            resp, rmt = func(args, app_path, view_name_parts)
+            return (resp, rmt)
         return ("<html><body>Unable to understand view name of %s with args %s and app path %s</body></html>" %(view_name, args, app_path),"text/html")
 
     def rv_(self, args, app_path, view_name_parts):
-        if True and False:
-            return ("<html><budy> App Path is [%s] </body></html>"%app_path,"text/html")
         mFunc = self.as_dash_instance(base_pathname=app_path).locate_endpoint_function()
         response = mFunc()
         return(response,"text/html")
@@ -201,4 +204,20 @@ class JupyterDash:
         return (rdata, rtype)
 
     def rv__dash_component_suites(self, args, app_path, view_name_parts):
-        return ("<html><body>Requested %s at %s with %s</body></html>" %(args,app_path,view_name_parts),"text/html")
+        dapp = self.as_dash_instance(base_pathname=app_path)
+
+        with dapp.app_context():
+            # Force recalc of dependencies in case the instance is a fresh one
+            dapp.index()
+            # Endpoint is dash-component-suites/package_name/path_in_package
+            try:
+                mFunc = dapp.locate_endpoint_function('dash-component-suites/<string:package_name>/<path:path_in_package_dist>')
+            except Exception as e:
+                return ("<html><body>Requested %s at %s with %s and failed with %s</body></html>" %(args,app_path,view_name_parts,e),"text/html")
+            # Need two arguments here: package_name and path_in_package_dist
+            package_name = view_name_parts[1]
+            path_in_package_dist = view_name_parts[2]
+            resp = mFunc(package_name=package_name,
+                         path_in_package_dist=path_in_package_dist)
+            return (resp.data.decode('utf-8'), resp.mimetype)
+
