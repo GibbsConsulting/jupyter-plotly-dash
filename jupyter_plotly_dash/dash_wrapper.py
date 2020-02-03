@@ -216,7 +216,7 @@ class JupyterDash:
                 return ("<html><body>Requested %s at %s with %s and failed with %s</body></html>" %(args,app_path,view_name_parts,e),"text/html")
             # Need two arguments here: package_name and path_in_package_dist
             package_name = view_name_parts[1]
-            path_in_package_dist = view_name_parts[2]
+            path_in_package_dist = "/".join(view_name_parts[2:])
             resp = mFunc(package_name=package_name,
                          path_in_package_dist=path_in_package_dist)
             return (resp.data.decode('utf-8'), resp.mimetype)
