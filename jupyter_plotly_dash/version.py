@@ -19,4 +19,4 @@
 #    along with jupyter-plotly-dash.  If not, see <https://www.gnu.org/licenses/>.
 #
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
