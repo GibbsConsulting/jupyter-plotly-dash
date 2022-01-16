@@ -46,6 +46,9 @@ setup(
     data_files = [
     ("etc/jupyter/jupyter_notebook_config.d", [
     "jupyter-config/jupyter_notebook_config.d/jupyter-plotly-dash.json"
+    ]),
+    ("etc/jupyter/jupyter_server_config.d", [
+    "jupyter-config/jupyter_server_config.d/jupyter-plotly-dash.json"
     ])
     ],
     include_package_data = True,
